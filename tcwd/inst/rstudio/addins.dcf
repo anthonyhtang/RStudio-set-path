@@ -1,0 +1,4 @@
+Name: RStudio clipboard path
+Description: If the clipboard contains a path, set working directory and Files pane (and open R-related files).
+Binding: sync_path_from_clipboard
+Interactive: true

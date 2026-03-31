@@ -1,0 +1,4 @@
+export(sync_path_from_clipboard)
+importFrom(rstudioapi, filesPaneNavigate)
+importFrom(rstudioapi, isAvailable)
+importFrom(rstudioapi, navigateToFile)
