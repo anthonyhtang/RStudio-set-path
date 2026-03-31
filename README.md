@@ -20,13 +20,13 @@ Installing this package pulls in **`clipr`** automatically. Other entries you ma
 
 ## Installation
 
-The add-in lives in the **`tcwd`** subfolder of this repository. The **installed** package name is **`rstudio.clipboard.path`**.
+The R package sources are in the **`rstudio.clipboard.path/`** directory (same name as the **installed** package `rstudio.clipboard.path`, not `tcwd`).
 
 ### Option A — From GitHub (no local paths)
 
 ```r
 install.packages("remotes")  # if you do not have it yet
-remotes::install_github("anthonyhtang/RStudio-set-path", subdir = "tcwd")
+remotes::install_github("anthonyhtang/RStudio-set-path", subdir = "rstudio.clipboard.path")
 ```
 
 (Fork? Use `yourname/RStudio-set-path` instead, or install from the default branch of your fork.)
@@ -34,19 +34,19 @@ remotes::install_github("anthonyhtang/RStudio-set-path", subdir = "tcwd")
 ### Option B — From a local clone (relative path)
 
 1. Clone or download this repository.
-2. In RStudio, set the working directory to the **repository root** — the folder that **contains** the `tcwd` directory (e.g. **Session → Set Working Directory → Choose Directory…**).
-3. Run **one** of the following (both use the **`tcwd`** folder relative to your current working directory):
+2. In RStudio, set the working directory to the **repository root** — the folder that **contains** the `rstudio.clipboard.path` directory (e.g. **Session → Set Working Directory → Choose Directory…**).
+3. Run **one** of the following (both use the **`rstudio.clipboard.path`** folder relative to your current working directory):
 
 ```r
-install.packages("tcwd", repos = NULL, type = "source")
+install.packages("rstudio.clipboard.path", repos = NULL, type = "source")
 ```
 
 ```r
 install.packages("remotes")
-remotes::install_local("tcwd")
+remotes::install_local("rstudio.clipboard.path")
 ```
 
-Do **not** paste a full `C:\...` or `/home/...` path unless you prefer; keeping the session at the repo root and using `"tcwd"` is enough.
+Do **not** paste a full `C:\...` or `/home/...` path unless you prefer; keeping the session at the repo root and using `"rstudio.clipboard.path"` is enough.
 
 ### After installing
 
@@ -84,12 +84,12 @@ RStudio does **not** let packages add items to the top **File / Edit** menu. Thi
 
 | Path | Purpose |
 |------|---------|
-| [`tcwd/R/sync_path_from_clipboard.R`](tcwd/R/sync_path_from_clipboard.R) | Add-in implementation |
-| [`tcwd/inst/rstudio/addins.dcf`](tcwd/inst/rstudio/addins.dcf) | RStudio registration |
+| [`rstudio.clipboard.path/R/sync_path_from_clipboard.R`](rstudio.clipboard.path/R/sync_path_from_clipboard.R) | Add-in implementation |
+| [`rstudio.clipboard.path/inst/rstudio/addins.dcf`](rstudio.clipboard.path/inst/rstudio/addins.dcf) | RStudio registration |
 
 ## Licence
 
-See [`tcwd/LICENSE`](tcwd/LICENSE).
+See [`rstudio.clipboard.path/LICENSE`](rstudio.clipboard.path/LICENSE).
 
 ## Repository & contributing
 
