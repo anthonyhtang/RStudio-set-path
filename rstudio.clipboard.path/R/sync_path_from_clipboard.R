@@ -101,21 +101,38 @@ normalize_existing_path <- function(path) {
 }
 
 #' Bring the Files pane to the front (RStudio command \code{activateFiles} = Show Files).
+#' @param delay_sec Seconds to wait after the command (it runs asynchronously).
 #' @noRd
-files_pane_to_front <- function() {
+files_pane_to_front <- function(delay_sec = 0.2) {
   tryCatch(
     executeCommand("activateFiles", quiet = TRUE),
     error = function(e) invisible(NULL)
   )
-  # executeCommand runs asynchronously; wait so the pane is visible before navigating
-  Sys.sleep(0.2)
+  Sys.sleep(delay_sec)
 }
 
 #' Bring Files pane to front, then set its directory (\code{filesPaneNavigate} alone can fail if the pane is not active).
 #' @noRd
 navigate_files_pane <- function(path) {
-  files_pane_to_front()
+  files_pane_to_front(0.12)
   filesPaneNavigate(path)
+}
+
+#' One short English console message (not a dialog): working directory + Files pane path.
+#' @noRd
+notify_sync <- function(target_dir, opened_file = NULL, file_skipped = FALSE) {
+  lines <- c(
+    paste0(
+      "[rstudio.clipboard.path] Files pane brought forward; working directory and Files location set to:\n  ",
+      target_dir
+    )
+  )
+  if (!is.null(opened_file)) {
+    lines <- c(lines, paste0("  Opened in editor: ", opened_file))
+  } else if (isTRUE(file_skipped)) {
+    lines <- c(lines, "  (Clipboard points to a non-R file; left unopened in editor.)")
+  }
+  message(paste(lines, collapse = "\n"), domain = NA)
 }
 
 #' RStudio add-in: set working directory and Files pane from the clipboard path.
@@ -132,6 +149,9 @@ sync_path_from_clipboard <- function() {
   if (!isAvailable()) {
     stop("This add-in must be run inside RStudio.", call. = FALSE)
   }
+  # Show Files first so later navigation is reliable if another tab was active.
+  files_pane_to_front(0.2)
+
   path_clean <- read_path_from_clipboard()
   if (!file.exists(path_clean) && !dir.exists(path_clean)) {
     stop(
@@ -144,7 +164,7 @@ sync_path_from_clipboard <- function() {
   if (dir.exists(path_abs)) {
     setwd(path_abs)
     navigate_files_pane(path_abs)
-    message("Working directory and Files pane: ", path_abs)
+    notify_sync(path_abs)
     return(invisible(path_abs))
   }
 
@@ -154,15 +174,9 @@ sync_path_from_clipboard <- function() {
 
   if (is_r_ecosystem_file(path_abs)) {
     navigateToFile(path_abs)
-    message(
-      "Working directory and Files pane: ", dir_abs, "\n",
-      "Opened: ", path_abs
-    )
+    notify_sync(dir_abs, opened_file = path_abs)
   } else {
-    message(
-      "Working directory and Files pane: ", dir_abs,
-      " (file on clipboard; not opened in editor)"
-    )
+    notify_sync(dir_abs, file_skipped = TRUE)
   }
   invisible(path_abs)
 }
