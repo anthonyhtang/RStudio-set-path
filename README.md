@@ -68,6 +68,14 @@ RStudio does **not** let packages add items to the top **File / Edit** menu. Thi
 | **Command palette** | **Windows / Linux:** `Ctrl+Shift+P` · **macOS:** `Cmd+Shift+P`. Or **Tools → Show Command Palette**. Type `RStudio clipboard path` or `clipboard` and choose the add-in. |
 | **Toolbar Addins** | Use the **Addins** control on the **main toolbar** (near **Run**). It includes a **search box** so you can avoid **Tools → Browse Addins…** every time. |
 | **Custom shortcut** | **Tools → Modify Keyboard Shortcuts** → search **RStudio clipboard path** → click the shortcut cell and press **any** free key combination you like. |
+| **R Console** | Run `rstudio.clipboard.path::sync_path_from_clipboard()` (same as the add-in; works even if the palette does not list it). |
+
+### Command palette does not show the add-in?
+
+- **Restart RStudio** once after `install_github` so add-ins are rescanned.
+- The palette is **not** the VS Code palette: it only lists what your **RStudio build** indexes. Try typing **`addin`**, **`clipboard`**, or **`RStudio clipboard`** (English).
+- Reliable path: **Tools → Browse Addins…** → search **clipboard** or **RStudio clipboard path** → **Run**.
+- Or bind a shortcut: **Tools → Modify Keyboard Shortcuts** → search **RStudio clipboard path**.
 
 ## Behaviour
 
