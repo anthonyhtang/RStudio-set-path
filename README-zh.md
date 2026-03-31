@@ -20,7 +20,7 @@
 
 ## 安装说明
 
-插件源码在仓库的 **`rstudio.clipboard.path/`** 目录下（与 R 包名一致；**不再使用**误导性的旧文件夹名 `tcwd`）。
+插件源码在仓库的 **`rstudio.clipboard.path/`** 目录下（与 R 安装后的包名一致）。
 
 ### 方式 A — 从 GitHub 安装（无需本地路径）
 
@@ -48,7 +48,7 @@ remotes::install_local("rstudio.clipboard.path")
 
 ### 安装之后
 
-**重启 RStudio**。若曾安装过旧包名 **`clippath`**，请执行一次：`remove.packages("clippath")`。
+**重启 RStudio**。
 
 ## 日常使用
 

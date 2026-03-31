@@ -20,7 +20,7 @@ Installing this package pulls in **`clipr`** automatically. Other entries you ma
 
 ## Installation
 
-The R package sources are in the **`rstudio.clipboard.path/`** directory (same name as the **installed** package `rstudio.clipboard.path`, not `tcwd`).
+The R package sources live in the **`rstudio.clipboard.path/`** directory (same name as the **installed** package).
 
 ### Option A — From GitHub (no local paths)
 
@@ -50,7 +50,7 @@ Do **not** paste a full `C:\...` or `/home/...` path unless you prefer; keeping 
 
 ### After installing
 
-Restart **RStudio**. If you ever installed the old package name **`clippath`**, remove it once: `remove.packages("clippath")`.
+Restart **RStudio**.
 
 ## Daily use
 
