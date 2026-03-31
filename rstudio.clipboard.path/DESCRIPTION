@@ -1,6 +1,6 @@
 Package: rstudio.clipboard.path
 Title: RStudio Add-in — Set Working Directory from Clipboard Path
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: person("HTang", email = "tang.heng@gmail.com", role = c("aut", "cre"))
 Description: RStudio add-in (Windows, macOS, Linux): read a directory or file
     path from the system clipboard, set the session working directory and Files

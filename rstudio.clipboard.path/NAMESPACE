@@ -1,5 +1,8 @@
 export(sync_path_from_clipboard)
 importFrom(rstudioapi, executeCommand)
 importFrom(rstudioapi, filesPaneNavigate)
+importFrom(rstudioapi, hasFun)
 importFrom(rstudioapi, isAvailable)
 importFrom(rstudioapi, navigateToFile)
+importFrom(rstudioapi, sendToConsole)
+importFrom(rstudioapi, viewer)
