@@ -100,10 +100,11 @@ normalize_existing_path <- function(path) {
   }
 }
 
-#' Bring the Files pane to the front (RStudio command \code{activateFiles} = Show Files).
-#' @param delay_sec Seconds to wait after the command (it runs asynchronously).
+#' Run RStudio \code{activateFiles} (Show Files) once, then wait.
+#' The command is asynchronous; \code{filesPaneNavigate} does not call \code{bringToFront}
+#' on the Files view, and \code{setwd()} tends to refresh Environment and leave that tab selected.
 #' @noRd
-files_pane_to_front <- function(delay_sec = 0.2) {
+files_pane_activate_once <- function(delay_sec = 0.25) {
   tryCatch(
     executeCommand("activateFiles", quiet = TRUE),
     error = function(e) invisible(NULL)
@@ -111,28 +112,66 @@ files_pane_to_front <- function(delay_sec = 0.2) {
   Sys.sleep(delay_sec)
 }
 
-#' Bring Files pane to front, then set its directory (\code{filesPaneNavigate} alone can fail if the pane is not active).
+#' Repeat activation so the Files tab actually wins after \code{setwd} / async UI updates.
+#' @noRd
+files_pane_bring_forward <- function(delay_sec = 0.28, repeats = 2L) {
+  repeats <- as.integer(repeats)
+  if (!is.finite(repeats) || repeats < 1L) {
+    repeats <- 1L
+  }
+  for (i in seq_len(repeats)) {
+    files_pane_activate_once(delay_sec)
+  }
+}
+
+#' If \pkg{later} is installed, schedule extra \code{activateFiles} after the add-in returns
+#' (RStudio sometimes switches back to Environment after the RPC completes).
+#' @noRd
+schedule_deferred_files_focus <- function() {
+  if (!requireNamespace("later", quietly = TRUE)) {
+    return(invisible(NULL))
+  }
+  bump <- function() {
+    tryCatch(
+      executeCommand("activateFiles", quiet = TRUE),
+      error = function(e) invisible(NULL)
+    )
+  }
+  later::later(bump, delay = 0.22)
+  later::later(bump, delay = 0.6)
+  invisible(NULL)
+}
+
+#' Activate Files briefly, then navigate (\code{filesPaneNavigate} alone can fail if the pane is not active).
 #' @noRd
 navigate_files_pane <- function(path) {
-  files_pane_to_front(0.12)
+  files_pane_activate_once(0.15)
   filesPaneNavigate(path)
 }
 
-#' One short English console message (not a dialog): working directory + Files pane path.
+#' English console notice (not a dialog). Uses a short banner so it is easy to spot in the Console.
 #' @noRd
 notify_sync <- function(target_dir, opened_file = NULL, file_skipped = FALSE) {
   lines <- c(
-    paste0(
-      "[rstudio.clipboard.path] Files pane brought forward; working directory and Files location set to:\n  ",
-      target_dir
-    )
+    "--- rstudio.clipboard.path ---",
+    paste0("Working directory and Files location:\n  ", target_dir)
   )
   if (!is.null(opened_file)) {
-    lines <- c(lines, paste0("  Opened in editor: ", opened_file))
+    lines <- c(lines, paste0("Opened in editor:\n  ", opened_file))
   } else if (isTRUE(file_skipped)) {
-    lines <- c(lines, "  (Clipboard points to a non-R file; left unopened in editor.)")
+    lines <- c(
+      lines,
+      "(Clipboard path is a file; not an R-related type — left unopened in editor.)"
+    )
   }
-  message(paste(lines, collapse = "\n"), domain = NA)
+  lines <- c(lines, "------------------------------")
+  text <- paste(lines, collapse = "\n")
+  if (getRversion() >= "4.0.0") {
+    message(text, domain = NA, immediate. = TRUE)
+  } else {
+    message(text, domain = NA)
+  }
+  flush.console()
 }
 
 #' RStudio add-in: set working directory and Files pane from the clipboard path.
@@ -149,8 +188,6 @@ sync_path_from_clipboard <- function() {
   if (!isAvailable()) {
     stop("This add-in must be run inside RStudio.", call. = FALSE)
   }
-  # Show Files first so later navigation is reliable if another tab was active.
-  files_pane_to_front(0.2)
 
   path_clean <- read_path_from_clipboard()
   if (!file.exists(path_clean) && !dir.exists(path_clean)) {
@@ -165,6 +202,8 @@ sync_path_from_clipboard <- function() {
     setwd(path_abs)
     navigate_files_pane(path_abs)
     notify_sync(path_abs)
+    files_pane_bring_forward(0.28, 2L)
+    schedule_deferred_files_focus()
     return(invisible(path_abs))
   }
 
@@ -173,10 +212,13 @@ sync_path_from_clipboard <- function() {
   navigate_files_pane(dir_abs)
 
   if (is_r_ecosystem_file(path_abs)) {
+    files_pane_bring_forward(0.28, 2L)
     navigateToFile(path_abs)
     notify_sync(dir_abs, opened_file = path_abs)
   } else {
     notify_sync(dir_abs, file_skipped = TRUE)
+    files_pane_bring_forward(0.28, 2L)
+    schedule_deferred_files_focus()
   }
   invisible(path_abs)
 }
