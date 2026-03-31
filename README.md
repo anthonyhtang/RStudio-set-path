@@ -1,6 +1,6 @@
 # RStudio clipboard path (`rstudio.clipboard.path`)
 
-**Language: English** · **中文说明:** [README-zh.md](README-zh.md)
+**Language: English** · **中文说明:** [README-zh.md](README-zh.md) · **Repository:** [github.com/anthonyhtang/RStudio-set-path](https://github.com/anthonyhtang/RStudio-set-path)
 
 This repository contains an **RStudio add-in** (R package name `rstudio.clipboard.path`). It reads a **folder or file path** from the system clipboard; if that path exists, it sets the **working directory** and **Files** pane, and **opens** the file in the editor when it looks like a common R-related file (see **Behaviour** below).
 
@@ -24,12 +24,12 @@ The add-in lives in the **`tcwd`** subfolder of this repository. The **installed
 
 ### Option A — From GitHub (no local paths)
 
-Replace `OWNER` and `REPO` with the GitHub user (or organisation) and repository name.
-
 ```r
 install.packages("remotes")  # if you do not have it yet
-remotes::install_github("OWNER/REPO", subdir = "tcwd")
+remotes::install_github("anthonyhtang/RStudio-set-path", subdir = "tcwd")
 ```
+
+(Fork? Use `yourname/RStudio-set-path` instead, or install from the default branch of your fork.)
 
 ### Option B — From a local clone (relative path)
 
@@ -91,24 +91,17 @@ RStudio does **not** let packages add items to the top **File / Edit** menu. Thi
 
 See [`tcwd/LICENSE`](tcwd/LICENSE).
 
-## Publishing the project
+## Repository & contributing
 
-**GitHub (typical first step)**  
-1. Create a new empty repository on GitHub (no README if you already have one locally).  
-2. In the repository root:
+**Source:** [github.com/anthonyhtang/RStudio-set-path](https://github.com/anthonyhtang/RStudio-set-path)
 
 ```bash
-git init
-git add .
-git commit -m "Initial commit: rstudio.clipboard.path add-in"
-git branch -M main
-git remote add origin https://github.com/OWNER/REPO.git
-git push -u origin main
+git clone https://github.com/anthonyhtang/RStudio-set-path.git
+cd RStudio-set-path
+# edit, then commit and push (default branch: main)
 ```
 
-Replace `OWNER/REPO` with your account and repository name, and use the same values in **Option A** under **Installation** above.
-
-**Other outlets (optional)**
+## Other distribution outlets (optional)
 
 | Outlet | What it is |
 |--------|------------|
