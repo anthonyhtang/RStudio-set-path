@@ -100,6 +100,24 @@ normalize_existing_path <- function(path) {
   }
 }
 
+#' Bring the Files pane to the front (RStudio command \code{activateFiles} = Show Files).
+#' @noRd
+files_pane_to_front <- function() {
+  tryCatch(
+    executeCommand("activateFiles", quiet = TRUE),
+    error = function(e) invisible(NULL)
+  )
+  # executeCommand runs asynchronously; wait so the pane is visible before navigating
+  Sys.sleep(0.2)
+}
+
+#' Bring Files pane to front, then set its directory (\code{filesPaneNavigate} alone can fail if the pane is not active).
+#' @noRd
+navigate_files_pane <- function(path) {
+  files_pane_to_front()
+  filesPaneNavigate(path)
+}
+
 #' RStudio add-in: set working directory and Files pane from the clipboard path.
 #'
 #' Intended to be run from the RStudio Addins menu (or a shortcut). Reads the
@@ -125,14 +143,14 @@ sync_path_from_clipboard <- function() {
 
   if (dir.exists(path_abs)) {
     setwd(path_abs)
-    filesPaneNavigate(path_abs)
+    navigate_files_pane(path_abs)
     message("Working directory and Files pane: ", path_abs)
     return(invisible(path_abs))
   }
 
   dir_abs <- normalize_existing_path(dirname(path_abs))
   setwd(dir_abs)
-  filesPaneNavigate(dir_abs)
+  navigate_files_pane(dir_abs)
 
   if (is_r_ecosystem_file(path_abs)) {
     navigateToFile(path_abs)
