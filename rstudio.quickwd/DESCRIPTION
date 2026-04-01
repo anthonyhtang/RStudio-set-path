@@ -1,13 +1,14 @@
 Package: rstudio.quickwd
-Title: RStudio Quick Working Directory — Add-ins for Clipboard and Active File
-Version: 2.0.0
+Title: RStudio Quick Working Directory — One Add-in (Clipboard or Active File)
+Version: 2.1.0
 Authors@R: person("HTang", email = "tang.heng@gmail.com", role = c("aut", "cre"))
-Description: Two RStudio add-ins (Windows, macOS, Linux) under the "RStudio quick
-    working directory" workflow: (1) read a path from the system clipboard and set
-    the working directory and Files pane (and open common R-related files in the
-    editor); (2) set working directory and Files pane from the folder of the file
-    open in the editor. Clipboard access uses the 'clipr' package; on Linux you may
-    need xclip, xsel, or wl-clipboard.
+Description: One RStudio add-in (Windows, macOS, Linux), manually triggered, that
+    sets working directory and the Files pane from a clipboard path, or from the
+    on-disk path of the file open in the active editor tab (parent folder).
+    Each run uses the clipboard when its first line is a valid path, else the
+    active tab path via 'rstudioapi'. Optional arguments force clipboard-only or
+    active-tab-only. Uses 'clipr'; on Linux you may need xclip, xsel, or
+    wl-clipboard.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Imports:

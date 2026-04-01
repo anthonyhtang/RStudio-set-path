@@ -1,9 +1,4 @@
-Name: Quick WD from clipboard
-Description: Set working directory and Files pane from a path on the clipboard (and open R-related files).
-Binding: quick_wd_from_clipboard
-Interactive: true
-
-Name: Quick WD from active file
-Description: Set working directory and Files pane to the folder of the file open in the editor.
-Binding: quick_wd_from_active_file
+Name: RStudio quick working directory
+Description: Manually run: wd + Files from clipboard if valid, else parent of active tab's on-disk path (via rstudioapi).
+Binding: quick_working_directory
 Interactive: true

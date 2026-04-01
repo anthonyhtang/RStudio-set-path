@@ -68,8 +68,6 @@ read_clipboard_lines <- function() {
 }
 
 #' Read a file or directory path from the clipboard (first line, trimmed, quotes stripped).
-#'
-#' @return A cleaned path string (not yet normalized).
 #' @noRd
 read_path_from_clipboard <- function() {
   raw <- read_clipboard_lines()
@@ -90,6 +88,37 @@ read_path_from_clipboard <- function() {
   path
 }
 
+#' First line of clipboard as a path, or \code{NA_character_} if unusable (no throw).
+#' @noRd
+peek_clipboard_path_safe <- function() {
+  if (!clipr::clipr_available()) {
+    return(NA_character_)
+  }
+  raw <- tryCatch(
+    clipr::read_clip(allow_non_interactive = TRUE),
+    error = function(e) NULL
+  )
+  if (is.null(raw) || !length(raw)) {
+    return(NA_character_)
+  }
+  raw <- trimws(raw)
+  if (!length(raw)) {
+    return(NA_character_)
+  }
+  path <- paste(raw, collapse = "\n")
+  path <- sub("\n.*", "", path, perl = TRUE)
+  path <- strip_bom(path)
+  path <- strip_outer_quotes(path)
+  path <- trimws(path)
+  if (!nzchar(path)) {
+    return(NA_character_)
+  }
+  if (!file.exists(path) && !dir.exists(path)) {
+    return(NA_character_)
+  }
+  path
+}
+
 #' Normalize an existing path for display and APIs (OS-appropriate separators).
 #' @noRd
 normalize_existing_path <- function(path) {
@@ -100,21 +129,26 @@ normalize_existing_path <- function(path) {
   }
 }
 
-#' RStudio add-in: set working directory and Files pane from the clipboard path.
-#'
-#' Part of \strong{RStudio quick working directory} (\pkg{rstudio.quickwd}).
-#' Reads the first line of the system clipboard. If it is an existing directory,
-#' sets the working directory and Files pane. If it is an existing file, sets both
-#' to the parent directory and opens the file in the editor when it looks like a
-#' common R-related file (see package README).
-#'
-#' @return Normalized absolute path (invisibly).
-#' @export
-quick_wd_from_clipboard <- function() {
-  if (!isAvailable()) {
-    stop("This add-in must be run inside RStudio.", call. = FALSE)
+#' Set \code{setwd} + Files pane from an existing file or directory path; may open R files.
+#' @noRd
+apply_wd_from_existing_path <- function(path_clean) {
+  path_abs <- normalize_existing_path(path_clean)
+  if (dir.exists(path_abs)) {
+    setwd(path_abs)
+    filesPaneNavigate(path_abs)
+    return(invisible(path_abs))
   }
+  dir_abs <- normalize_existing_path(dirname(path_abs))
+  setwd(dir_abs)
+  filesPaneNavigate(dir_abs)
+  if (is_r_ecosystem_file(path_abs)) {
+    navigateToFile(path_abs)
+  }
+  invisible(path_abs)
+}
 
+#' @noRd
+quick_wd_from_clipboard_only <- function() {
   path_clean <- read_path_from_clipboard()
   if (!file.exists(path_clean) && !dir.exists(path_clean)) {
     stop(
@@ -122,39 +156,11 @@ quick_wd_from_clipboard <- function() {
       call. = FALSE
     )
   }
-  path_abs <- normalize_existing_path(path_clean)
-
-  if (dir.exists(path_abs)) {
-    setwd(path_abs)
-    filesPaneNavigate(path_abs)
-    return(invisible(path_abs))
-  }
-
-  dir_abs <- normalize_existing_path(dirname(path_abs))
-  setwd(dir_abs)
-  filesPaneNavigate(dir_abs)
-
-  if (is_r_ecosystem_file(path_abs)) {
-    navigateToFile(path_abs)
-  }
-  invisible(path_abs)
+  apply_wd_from_existing_path(path_clean)
 }
 
-#' RStudio add-in: set working directory and Files pane from the active editor file.
-#'
-#' Part of \strong{RStudio quick working directory} (\pkg{rstudio.quickwd}).
-#' Uses the path of the document currently focused in the source editor (not the
-#' clipboard). Sets \code{setwd()} and \code{filesPaneNavigate()} to that file's
-#' parent directory. Does not call \code{navigateToFile()} — the file is already open.
-#' Unsaved \emph{Untitled} buffers have no path on disk and will error until saved.
-#'
-#' @return Normalized absolute path of the active file (invisibly).
-#' @export
-quick_wd_from_active_file <- function() {
-  if (!isAvailable()) {
-    stop("This add-in must be run inside RStudio.", call. = FALSE)
-  }
-
+#' @noRd
+quick_wd_from_active_file_only <- function() {
   ctx <- getActiveDocumentContext()
   path_raw <- ctx$path
   if (is.null(path_raw) || !nzchar(path_raw)) {
@@ -164,22 +170,58 @@ quick_wd_from_active_file <- function() {
       call. = FALSE
     )
   }
-
   if (!file.exists(path_raw) && !dir.exists(path_raw)) {
     stop(
       "Active path does not exist on disk:\n", path_raw,
       call. = FALSE
     )
   }
-
   path_abs <- normalize_existing_path(path_raw)
   dir_abs <- if (dir.exists(path_abs)) {
     path_abs
   } else {
     normalize_existing_path(dirname(path_abs))
   }
-
   setwd(dir_abs)
   filesPaneNavigate(dir_abs)
   invisible(path_abs)
+}
+
+#' RStudio add-in: quick working directory (clipboard and/or active file).
+#'
+#' One manually triggered add-in with two capabilities: (1) set wd from a path on
+#' the clipboard, (2) set wd from the on-disk path of the file in the active
+#' source tab (parent folder; \code{getActiveDocumentContext()$path}). With
+#' \code{source = "default"}, each run first checks the clipboard for a valid
+#' existing path (first line); if none, it uses the active tab path. \code{"clipboard"}
+#' and \code{"active"} force one source only.
+#'
+#' @param source One of \code{"default"}, \code{"clipboard"}, \code{"active"}.
+#'   The add-in binding uses \code{"default"}. From the console, use
+#'   \code{quick_working_directory("clipboard")} or \code{...("active")} when you
+#'   want a single capability regardless of clipboard contents.
+#'
+#' @return Normalized absolute path used for \code{setwd} / navigation (invisibly).
+#' @export
+quick_working_directory <- function(source = c("default", "clipboard", "active")) {
+  if (!isAvailable()) {
+    stop("This add-in must be run inside RStudio.", call. = FALSE)
+  }
+  if (!missing(source) && length(source) == 1L && identical(source, "auto")) {
+    source <- "default"
+  }
+  source <- match.arg(source)
+
+  if (source == "clipboard") {
+    return(quick_wd_from_clipboard_only())
+  }
+  if (source == "active") {
+    return(quick_wd_from_active_file_only())
+  }
+
+  clip_path <- peek_clipboard_path_safe()
+  if (!is.na(clip_path)) {
+    return(apply_wd_from_existing_path(clip_path))
+  }
+  quick_wd_from_active_file_only()
 }

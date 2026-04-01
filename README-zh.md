@@ -2,50 +2,46 @@
 
 **语言：中文** · **English:** [README.md](README.md) · **源码仓库：** [github.com/anthonyhtang/rstudio-quick-working-directory](https://github.com/anthonyhtang/rstudio-quick-working-directory)
 
-## 动机（Motivation）
+## 概述
 
-在 RStudio 里**想尽快跑一段脚本或项目**时，最烦人的往往是 **Working Directory（工作目录）**：要点 **Session → Set Working Directory**、手动 `setwd()`，或者把 **Files** 窗格对齐到目标文件夹。本包提供 **两个插件**（品牌：**RStudio quick working directory**）：
+`rstudio.quickwd` 向 RStudio 登记一个插件：**RStudio quick working directory**。你在命令面板、Addins 菜单或自定义快捷键里**手动运行**它时，会按当前情况更新 `setwd()` 与 **Files** 窗格，数据来源可以是：
 
-1. **Quick WD from clipboard** — 在资源管理器等地方**复制**路径（目录或文件），回到 RStudio，**一个快捷键**运行插件，**wd** 与 **Files** 即与路径对齐。
-2. **Quick WD from active file** — 要跑的脚本**已经在编辑器里打开**；运行该插件，工作目录会设为该文件**所在文件夹**（**不经过剪贴板**）。
+- **剪贴板里的路径**（目录或文件），或  
+- **当前在编辑器里打开、且 RStudio 能给出磁盘路径的文件**：用该文件的**实际路径**（须仍在磁盘上存在），把工作目录设为该路径的**所在文件夹**（即父目录）。
 
-实现上，包名 **`rstudio.quickwd`**：前者用 **`clipr`** 读剪贴板；后者用 **`rstudioapi::getActiveDocumentContext()`**。前者对常见 **R 相关文件**还可**在编辑器中打开**（见下文 **行为说明**）。
+若剪贴板首行解析为磁盘上存在的路径，则按该路径处理（是否在编辑器打开文件见下文 **行为说明**）；否则改用**当前活动源标签页**对应的**磁盘路径**的父目录；**Untitled** 等没有磁盘路径的标签页无法走这一条。插件不会在后台自行执行。
+
+在 **R 控制台**可限定只走一种来源：`quick_working_directory("clipboard")` 或 `quick_working_directory("active")`（见下文）。
 
 ---
 
-## 什么是 RStudio「插件」（Addins）？
+## 在 RStudio 里运行
 
-很多人**没接触过插件系统**，这里单独说明一下：
+装好本包后**重启一次 RStudio**。插件登记在 [`addins.dcf`](rstudio.quickwd/inst/rstudio/addins.dcf)：
 
-- **插件**是 R **包**在安装后向 **RStudio 登记**的一小段可执行功能，**不是**单独的应用商店；装好包、**重启 RStudio** 后，IDE 会自动发现该包声明的插件。
-- 本包登记 **两个** 插件（见 [`addins.dcf`](rstudio.quickwd/inst/rstudio/addins.dcf)）：
+| 名称（与 RStudio 列表一致） | 作用 |
+|----------------------------|------|
+| **RStudio quick working directory** | 剪贴板首行为有效路径则用剪贴板；否则用**当前活动标签页**对应**磁盘路径**的父目录。细则见下文。 |
 
-| 插件名称（英文，与 RStudio 列表一致） | 作用 |
-|--------------------------------------|------|
-| **Quick WD from clipboard** | **剪贴板**里的路径 → `setwd()` + Files 窗格（必要时打开 R 类文件）。 |
-| **Quick WD from active file** | **当前编辑器中已打开的文件**（磁盘路径）→ `setwd()` 到其**所在目录** + Files 窗格。 |
-
-**在 RStudio 里可以从哪里用到插件？**
-
-| 入口 | 位置 |
+| 入口 | 操作 |
 |------|------|
-| **浏览全部插件** | 菜单 **Tools → Browse Addins…**，列表可搜索，选中后点 **Run**。 |
-| **工具栏** | 主工具栏 **Addins** 下拉（一般在 **Run** 旁边），带搜索框，通常比每次打开 Browse 更快。 |
-| **命令面板** | **Tools → Show Command Palette**，用键盘输入几个字母即可筛选（见下文 **推荐用法**）。 |
+| **Tools → Browse Addins…** | 搜索后点 **Run**。 |
+| **工具栏** | **Addins** 下拉（**Run** 附近）。 |
+| **命令面板** | **Tools → Show Command Palette**；亦可参见下文 **推荐用法**。 |
 
 ---
 
 ## 不是日常编程用的「库」
 
-不要在日常脚本里 `library()` 本包。只需**安装一次**；之后任选一个插件，用 **命令面板 + 键盘**、**Browse Addins**、工具栏 **Addins** 或**各自快捷键**调用。
+不要在日常脚本里 `library()` 本包。只需**安装一次**；之后用 **命令面板 + 键盘**、**Browse Addins**、工具栏 **Addins** 或**自定义快捷键**调用**同一个**插件。
 
 ## 环境与依赖
 
 - **RStudio**（依赖 `rstudioapi`）。
-- **Windows / macOS / Linux**，剪贴板通过 CRAN 包 **`clipr`**。
+- **Windows / macOS / Linux**，剪贴板通过 CRAN 包 **`clipr`**（每次运行时要判断「剪贴板路径是否有效」会读剪贴板；`quick_working_directory("clipboard")` 也依赖它）。
 - **Linux**：若无法读剪贴板，请安装 **xclip**、**xsel**（X11）或 **wl-clipboard**（Wayland）。
 
-安装本包时会**自动**安装 **`clipr`**（仅 **Quick WD from clipboard** 需要；**Quick WD from active file** 不用剪贴板）。Addins 列表里 **`clipr`** 自带的其它项（如 “Output to clipboard”）与本包无关。
+安装本包时会**自动**安装 **`clipr`**。Addins 列表里 **`clipr`** 自带的其它项（如 “Output to clipboard”）与本包无关。
 
 ## 安装说明
 
@@ -81,23 +77,14 @@ remotes::install_local("rstudio.quickwd")
 
 ### 从旧仓库 / 旧包名迁移
 
-以前仓库名为 **`RStudio-set-path`**、R 包名为 **`rstudio.clipboard.path`**。请改装 **`rstudio.quickwd`**，并使用 **`subdir = "rstudio.quickwd"`**。建议在 GitHub 上将仓库改名为 **`rstudio-quick-working-directory`**（**Settings → General → Repository name**），与文档链接一致，并在本地更新 **`git remote`**。
+GitHub 仓库：**`anthonyhtang/rstudio-quick-working-directory`**，R 包在其中的 **`rstudio.quickwd/`** 目录。若本地克隆曾指向旧仓库名，请执行 **`git remote set-url origin https://github.com/anthonyhtang/rstudio-quick-working-directory.git`**。若仍装着旧 R 包 **`rstudio.clipboard.path`**，请改装 **`rstudio.quickwd`** 并使用 **`subdir = "rstudio.quickwd"`**。
 
 ## 日常使用
 
-### A — Quick WD from clipboard（剪贴板）
+1. **想按剪贴板来：** 复制**目录或文件**路径（多行时只使用首行逻辑），运行插件。支持带引号路径与 UTF-8 BOM。
+2. **想按当前打开文件来：** 清空剪贴板或确保剪贴板**不是**有效路径，在编辑器里**聚焦**已有**磁盘路径**的标签页（不是 **Untitled**），再运行**同一**插件。
 
-1. 将**目录或文件**路径复制到剪贴板（多行时只使用首行逻辑）。
-2. 运行 **Quick WD from clipboard**（命令面板、Addins 或快捷键）。
-
-支持带引号路径与 UTF-8 BOM。
-
-### B — Quick WD from active file（当前文件）
-
-1. 在**源编辑器**里打开并**聚焦**一个**已保存到磁盘**的文件。
-2. 运行 **Quick WD from active file**。
-
-**wd** 与 **Files** 窗格会设为该文件**所在文件夹**。若当前是**未保存的 Untitled**，没有磁盘路径，请先保存，或改用剪贴板插件。
+若剪贴板里仍是**旧但有效**的路径，下一次运行会**先按剪贴板**处理。若只想按**当前标签页磁盘路径**的父目录来，可在控制台执行 `rstudio.quickwd::quick_working_directory("active")`，或清空/改掉剪贴板内容。
 
 ## 推荐用法：命令面板 + 关键字（最快、尽量不用鼠标）
 
@@ -108,12 +95,7 @@ remotes::install_local("rstudio.quickwd")
 
 也可：**Tools → Show Command Palette**。
 
-在面板里可按插件名搜索，例如：
-
-| 插件 | 可尝试输入（英文） |
-|------|-------------------|
-| **Quick WD from clipboard** | **`quick`**、**`clipboard`**、**`quick wd`** |
-| **Quick WD from active file** | **`quick`**、**`active`**、**`set wd`**、**`active file`** |
+在面板里可搜索，例如：**`quick working`**、**`RStudio quick`**、**`working directory`**、**`quick wd`**。
 
 **若本机打开命令面板的不是 Ctrl+Shift+P**（例如 **Ctrl+Alt+P**）：**Tools → Modify Keyboard Shortcuts** → 搜 **`Show Command Palette`**，以其中显示为准。
 
@@ -121,11 +103,11 @@ remotes::install_local("rstudio.quickwd")
 
 ## 自定义快捷键（可选）
 
-本包**不自带**默认快捷键。可为**两个插件分别**绑定：
+本包**不自带**默认快捷键。可为该插件绑定一组未占用组合键：
 
 1. **Tools → Modify Keyboard Shortcuts**
-2. 搜索 **`Quick WD from clipboard`** 或 **`Quick WD from active file`**
-3. 在 **快捷键** 格子里各设一组未占用的组合键
+2. 搜索 **`RStudio quick working directory`**
+3. 在 **快捷键** 格子里设置
 
 参考：[Custom shortcuts（Posit）](https://docs.posit.co/ide/user/ide/guide/productivity/custom-shortcuts.html)
 
@@ -133,19 +115,26 @@ remotes::install_local("rstudio.quickwd")
 
 | 方式 | 操作 |
 |------|------|
-| **工具栏 Addins** | **Addins** → 搜索插件名 → 运行。 |
-| **Browse Addins** | **Tools → Browse Addins…** → 搜索 **quick** / **clipboard** / **active** → **Run**。 |
-| **R 控制台** | `rstudio.quickwd::quick_wd_from_clipboard()` 或 `rstudio.quickwd::quick_wd_from_active_file()` |
+| **工具栏 Addins** | **Addins** → 搜索 **RStudio quick working directory** → 运行。 |
+| **Browse Addins** | **Tools → Browse Addins…** → 搜索 **quick** → **Run**。 |
+| **R 控制台** | `rstudio.quickwd::quick_working_directory()` — 与插件相同（`source = "default"`）。可选：`quick_working_directory("clipboard")` 或 `quick_working_directory("active")` 分别只走剪贴板或只走当前文件。 |
 
 ### 命令面板里搜不到？
 
 - **重启 RStudio** 后再试。
-- 可试 **`addin`**、**`quick`**、**`clipboard`**、**`active`** 等英文关键词。
-- 最稳妥：**Tools → Browse Addins…** 按名称运行。
+- 可试 **`addin`**、**`quick`**、**`working`**、**`directory`** 等英文关键词。
+- 最稳妥：**Tools → Browse Addins…** 搜索 **RStudio quick working directory** → **Run**。
 
 ## 行为说明
 
-### Quick WD from clipboard
+### 默认行为（插件与无参 `quick_working_directory()`）
+
+在**每一次**你触发的运行里：
+
+1. 若剪贴板解析出**可用且存在**的路径 → 与下文 **从剪贴板** 相同。
+2. 否则 → 与下文 **从当前文件** 相同。
+
+### 从剪贴板（当本次运行剪贴板符合条件时，或 `source = "clipboard"`）
 
 | 剪贴板内容 | Working Directory + Files 窗格 | 是否在编辑器打开文件 |
 |------------|--------------------------------|----------------------|
@@ -156,13 +145,15 @@ remotes::install_local("rstudio.quickwd")
 **会在编辑器中打开的文件扩展名**（不区分大小写）：  
 `r`, `rmd`, `qmd`, `rnw`, `rhtml`, `rd`, `rproj`, `rpres`, `rhistory`, `c`, `cpp`, `cc`, `cxx`, `h`, `hpp`, `f`, `f90`，以及文件名为 `.Rprofile`、`.Renviron` 的情况。
 
-### Quick WD from active file
+### 从当前文件（当本次运行剪贴板不符合条件时，或 `source = "active"`）
+
+依据 `rstudioapi::getActiveDocumentContext()`：使用 RStudio 为**当前聚焦源标签页**返回的**路径字符串**（即该文件在磁盘上的实际路径，须仍存在）。工作目录设为该路径的**父目录**（若该路径本身是目录，则设为该目录）。
 
 | 情况 | 结果 |
 |------|------|
-| 当前标签是**已保存**的磁盘文件 | `setwd()` + Files → 该文件**所在目录**。 |
-| **Untitled** / 未保存 | 报错；请先保存或用剪贴板插件。 |
-| 磁盘上已不存在该路径 | 报错。 |
+| 当前标签有**磁盘路径**且路径仍存在 | `setwd()` + Files → 该路径的**父目录**（路径为目录时则为该目录）。 |
+| **Untitled** / 无磁盘路径 | 报错；请先存盘或在剪贴板放入有效路径。 |
+| RStudio 给出的路径在磁盘上已不存在 | 报错。 |
 
 不会在编辑器里再次 `navigateToFile()` — 文件本来已打开。
 
@@ -179,4 +170,4 @@ remotes::install_local("rstudio.quickwd")
 
 ## 公开与分发（概要）
 
-- **GitHub**：默认仓库 [anthonyhtang/rstudio-quick-working-directory](https://github.com/anthonyhtang/rstudio-quick-working-directory)；安装命令见上文 **方式 A**。克隆：`git clone https://github.com/anthonyhtang/rstudio-quick-working-directory.git`。更多分发渠道见英文 [README.md](README.md) 末尾。
+- **GitHub**：[anthonyhtang/rstudio-quick-working-directory](https://github.com/anthonyhtang/rstudio-quick-working-directory)；安装命令见上文 **方式 A**。克隆：`git clone https://github.com/anthonyhtang/rstudio-quick-working-directory.git`。更多分发渠道见英文 [README.md](README.md) 末尾。
