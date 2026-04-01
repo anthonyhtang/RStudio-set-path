@@ -6,9 +6,26 @@
 
 ---
 
+## 什么是 RStudio「插件」（Addins）？
+
+很多人**没接触过插件系统**，这里单独说明一下：
+
+- **插件**是 R **包**在安装后向 **RStudio 登记**的一小段可执行功能，**不是**单独的应用商店；装好包、**重启 RStudio** 后，IDE 会自动发现该包声明的插件。
+- 本包只登记 **一个** 插件，名称是 **RStudio clipboard path**（见 [`addins.dcf`](rstudio.clipboard.path/inst/rstudio/addins.dcf)）。
+
+**在 RStudio 里可以从哪里用到插件？**
+
+| 入口 | 位置 |
+|------|------|
+| **浏览全部插件** | 菜单 **Tools → Browse Addins…**，列表可搜索，选中后点 **Run**。 |
+| **工具栏** | 主工具栏 **Addins** 下拉（一般在 **Run** 旁边），带搜索框，通常比每次打开 Browse 更快。 |
+| **命令面板** | **Tools → Show Command Palette**，用键盘输入几个字母即可筛选（见下文 **推荐用法**）。 |
+
+---
+
 ## 不是日常编程用的「库」
 
-不要在日常脚本里 `library()` 本包。只需**安装一次**，之后通过 **Addins**、**命令面板** 或**自己绑定的快捷键**运行插件即可。
+不要在日常脚本里 `library()` 本包。只需**安装一次**；之后优先用 **命令面板 + 键盘** 调用，也可用 **Browse Addins**、工具栏 **Addins**，或**自定义快捷键**。
 
 ## 环境与依赖
 
@@ -53,27 +70,51 @@ remotes::install_local("rstudio.clipboard.path")
 ## 日常使用
 
 1. 将**目录或文件**的完整路径复制到剪贴板（多行时只使用与实现一致的首行逻辑）。
-2. 用下文 **快速运行插件** 中的任一方式执行。
+2. 运行插件 — **推荐：命令面板 + 键盘**（下一节）；也可用菜单或工具栏。
 
 支持带引号路径与 UTF-8 BOM。
 
-## 快速运行插件
+## 推荐用法：命令面板 + 关键字（最快、尽量不用鼠标）
 
-RStudio **不允许**把插件挂到 **File / Edit** 等顶层菜单。本包**不自带默认快捷键**，需要请自行在快捷键设置里绑定。
+**思路：** 用快捷键打开 **命令面板（Command Palette）** → 输入几个字母筛选 → **Enter** 运行，不必每次去点 **Browse Addins**。
+
+| 系统 | **Show Command Palette** 的默认快捷键 |
+|------|----------------------------------------|
+| **Windows / Linux** | **Ctrl+Shift+P** |
+| **macOS** | **Cmd+Shift+P** |
+
+也可从菜单打开：**Tools → Show Command Palette**。
+
+打开后输入例如 **`clipboard`** 或 **`RStudio clipboard`**（英文），选中 **RStudio clipboard path** 回车即可。
+
+**若你本机快捷键不是 Ctrl+Shift+P**（例如改成了 **Ctrl+Alt+P**）：打开 **Tools → Modify Keyboard Shortcuts**，搜索 **`Show Command Palette`**，以里面**实际显示**的组合键为准 —— 那就是打开同一命令面板的快捷键。
+
+说明文档：[Command Palette（Posit）](https://docs.posit.co/ide/user/ide/guide/ui/command-palette.html)
+
+## 自定义快捷键（可选）
+
+本包**不自带**默认快捷键。若要绑定成一键运行：
+
+1. 菜单 **Tools → Modify Keyboard Shortcuts**
+2. 搜索 **`RStudio clipboard path`**（或在 **Addins** 相关区域找到同名项）
+3. 点击该行的 **快捷键** 格子，按下**当前未被占用**的组合键（例如 **Ctrl+Alt+Y**）
+
+参考：[Custom shortcuts（Posit）](https://docs.posit.co/ide/user/ide/guide/productivity/custom-shortcuts.html)
+
+## 其它运行方式
 
 | 方式 | 操作 |
 |------|------|
-| **命令面板（推荐快速唤起）** | **Windows / Linux：** `Ctrl+Shift+P` · **macOS：** `Cmd+Shift+P`。或菜单 **Tools → Show Command Palette**。输入 **`RStudio clipboard path`** 或 **`clipboard`**，选中对应插件回车。 |
-| **工具栏 Addins** | 主工具栏 **Addins** 下拉（在 **Run** 附近），带**搜索框**，可少用 **Browse Addins**。 |
-| **自定义快捷键** | **Tools → Modify Keyboard Shortcuts** → 搜索 **RStudio clipboard path** → 在快捷键栏按下**任意**未占用的组合键。 |
-| **R 控制台** | 执行 `rstudio.clipboard.path::sync_path_from_clipboard()`（与插件等价；命令面板里找不到时也可用）。 |
+| **工具栏 Addins** | 主工具栏 **Addins** → 搜索 **RStudio clipboard path** → 运行。 |
+| **Browse Addins** | **Tools → Browse Addins…** → 搜索 **clipboard** → **Run**。 |
+| **R 控制台** | `rstudio.clipboard.path::sync_path_from_clipboard()`（与插件等价）。 |
 
-### 按了 Ctrl+Shift+P 还是找不到？
+### 按了命令面板快捷键还是找不到插件？
 
 - 安装或更新后**先完全退出并重启一次 RStudio**，插件列表才会刷新。
-- 命令面板**不是** VS Code 的那套，能搜到什么取决于当前 **RStudio 版本**。可试英文关键词：**`addin`**、**`clipboard`**、**`RStudio clipboard`**。
-- 最稳妥：**Tools → Browse Addins…**（浏览插件）→ 搜索 **clipboard** 或 **RStudio clipboard path** → **Run**。
-- 或：**Tools → Modify Keyboard Shortcuts** → 搜索 **RStudio clipboard path** → 自己绑一个快捷键。
+- 能搜到什么取决于 **RStudio 版本**；可试英文关键词：**`addin`**、**`clipboard`**、**`RStudio clipboard`**。
+- 最稳妥：**Tools → Browse Addins…** → 搜索 **clipboard** 或 **RStudio clipboard path** → **Run**。
+- 或：**Tools → Modify Keyboard Shortcuts** → 搜索 **RStudio clipboard path** → 绑定快捷键。
 
 ## 行为说明
 

@@ -2,13 +2,29 @@
 
 **Language: English** · **中文说明:** [README-zh.md](README-zh.md) · **Repository:** [github.com/anthonyhtang/RStudio-set-path](https://github.com/anthonyhtang/RStudio-set-path)
 
-This repository contains an **RStudio add-in** (R package name `rstudio.clipboard.path`). It reads a **folder or file path** from the system clipboard; if that path exists, it sets the **working directory** and **Files** pane, and **opens** the file in the editor when it looks like a common R-related file (see **Behaviour** below).
+This repository contains an **RStudio add-in** (R package name `rstudio.clipboard.path`). It reads a **folder or file** path from the system clipboard; if that path exists, it sets the **working directory** and **Files** pane, and **opens** the file in the editor when it looks like a common R-related file (see **Behaviour** below).
+
+---
+
+## What are RStudio add-ins? (if you are new to this)
+
+**Add-ins** are small actions that an R **package** can register with **RStudio** after you install the package. They are **not** a separate app store: you install a normal R package, restart RStudio, and the IDE picks up whatever add-ins that package declares.
+
+**Where you can run add-ins in RStudio**
+
+| Place | Menu / UI |
+|--------|-----------|
+| **Browse list** | **Tools → Browse Addins…** — searchable list of every add-in from installed packages; click **Run**. |
+| **Toolbar** | The **Addins** dropdown on the **main toolbar** (near **Run**) — same list, often faster than opening the full dialog. |
+| **Command palette** | **Tools → Show Command Palette** (see **Fastest way to run this add-in** below) — type a few letters of the name. |
+
+This package registers **one** add-in, named **RStudio clipboard path** (see [`addins.dcf`](rstudio.clipboard.path/inst/rstudio/addins.dcf)).
 
 ---
 
 ## Not a coding library
 
-Do **not** `library()` this in everyday scripts. Install it **once**; after that, run the add-in from the **Addins** menu, the **command palette**, or a shortcut you assign yourself.
+Do **not** `library()` this in everyday scripts. Install it **once**; after that, run the add-in from the **command palette** (recommended), **Browse Addins**, the toolbar **Addins** menu, or a **shortcut** you assign yourself.
 
 ## Requirements
 
@@ -55,20 +71,44 @@ Restart **RStudio**.
 ## Daily use
 
 1. Copy a **folder** or **file** path to the clipboard (only the first line is used if there are several).
-2. Run the add-in using any method in **Quick ways to run the add-in** below.
+2. Run the add-in — **fastest:** command palette + keyboard (below); other options if you prefer.
 
 Quoted paths and a leading UTF-8 BOM are tolerated.
 
-## Quick ways to run the add-in
+## Fastest way to run this add-in (keyboard, no mouse)
 
-RStudio does **not** let packages add items to the top **File / Edit** menu. This package ships **no default shortcut**; assign one yourself if you want it.
+**Use the Command Palette:** press the shortcut, type a keyword, press **Enter**. You do **not** need to reach for **Browse Addins** every time.
+
+| OS | Default shortcut for **Show Command Palette** |
+|----|-----------------------------------------------|
+| **Windows / Linux** | **Ctrl+Shift+P** |
+| **macOS** | **Cmd+Shift+P** |
+
+You can also open it from the menu: **Tools → Show Command Palette**.
+
+Then type e.g. **`clipboard`** or **`RStudio clipboard`** (English) and select **RStudio clipboard path**.
+
+**If your shortcut is different** (for example you remapped it to **Ctrl+Alt+P**): go to **Tools → Modify Keyboard Shortcuts**, search **`Show Command Palette`**, and use whatever key combination RStudio shows there — that opens the same palette.
+
+Official overview: [Command Palette – RStudio / Posit](https://docs.posit.co/ide/user/ide/guide/ui/command-palette.html).
+
+## Custom shortcut (optional)
+
+This package does **not** ship a default keybinding. To bind your own:
+
+1. **Tools → Modify Keyboard Shortcuts**
+2. Search **`RStudio clipboard path`** (or scroll the **Addins** section)
+3. Click the **Shortcut** cell for that row and press any **unused** key combination (e.g. **Ctrl+Alt+Y**)
+
+[Custom shortcuts – RStudio / Posit](https://docs.posit.co/ide/user/ide/guide/productivity/custom-shortcuts.html)
+
+## Other ways to run the add-in
 
 | Method | How |
 |--------|-----|
-| **Command palette** | **Windows / Linux:** `Ctrl+Shift+P` · **macOS:** `Cmd+Shift+P`. Or **Tools → Show Command Palette**. Type `RStudio clipboard path` or `clipboard` and choose the add-in. |
-| **Toolbar Addins** | Use the **Addins** control on the **main toolbar** (near **Run**). It includes a **search box** so you can avoid **Tools → Browse Addins…** every time. |
-| **Custom shortcut** | **Tools → Modify Keyboard Shortcuts** → search **RStudio clipboard path** → click the shortcut cell and press **any** free key combination you like. |
-| **R Console** | Run `rstudio.clipboard.path::sync_path_from_clipboard()` (same as the add-in; works even if the palette does not list it). |
+| **Toolbar Addins** | **Addins** on the **main toolbar** (near **Run**) — search box, then run **RStudio clipboard path**. |
+| **Browse Addins** | **Tools → Browse Addins…** → search **clipboard** → **Run**. |
+| **R Console** | `rstudio.clipboard.path::sync_path_from_clipboard()` — same behaviour as the add-in. |
 
 ### Command palette does not show the add-in?
 
