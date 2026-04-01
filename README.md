@@ -2,7 +2,11 @@
 
 **Language: English** · **中文说明:** [README-zh.md](README-zh.md) · **Repository:** [github.com/anthonyhtang/RStudio-set-path](https://github.com/anthonyhtang/RStudio-set-path)
 
-This repository contains an **RStudio add-in** (R package name `rstudio.clipboard.path`). It reads a **folder or file** path from the system clipboard; if that path exists, it sets the **working directory** and **Files** pane, and **opens** the file in the editor when it looks like a common R-related file (see **Behaviour** below).
+## Motivation
+
+When you want to **run something quickly** in RStudio, the **working directory** is often the most tedious part: digging through **Session → Set Working Directory**, typing `setwd()`, or lining up the **Files** pane with the folder you care about. This add-in is aimed at that friction—**copy** a path (folder or file) from Explorer, the terminal, or anywhere else, **switch to RStudio**, and trigger the add-in with **one keyboard shortcut** (command palette or a binding you choose). Your session **working directory** and **Files** pane update immediately.
+
+Technically, **`rstudio.clipboard.path`** is an R package that reads the path from the **clipboard**; if it exists on disk, it sets `setwd()` and navigates the Files pane, and for common R-related files it can **open** them in the editor (see **Behaviour** below).
 
 ---
 

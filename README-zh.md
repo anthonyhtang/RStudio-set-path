@@ -2,7 +2,11 @@
 
 **语言：中文** · **English:** [README.md](README.md) · **源码仓库：** [github.com/anthonyhtang/RStudio-set-path](https://github.com/anthonyhtang/RStudio-set-path)
 
-本仓库提供一个 **RStudio 插件**（安装后的 R 包名为 **`rstudio.clipboard.path`**）。它会读取**系统剪贴板**里的**目录或文件路径**；若路径存在，则设置 **Working Directory** 与 **Files** 窗格；若判断为常见 **R 相关文件**，还会在编辑器中**打开**该文件（见下文 **行为说明**）。
+## 动机（Motivation）
+
+在 RStudio 里**想尽快跑一段脚本或项目**时，最烦人的往往是 **Working Directory（工作目录）**：要点 **Session → Set Working Directory**、手动 `setwd()`，或者把 **Files** 窗格对齐到目标文件夹。本插件针对的就是这一步：在资源管理器或其它地方**复制**好路径（目录或文件），**回到 RStudio**，用**一个热键**（命令面板或你自己绑的快捷键）触发插件，会话的 **wd** 和 **Files** 会立刻对齐。
+
+从实现上说，**`rstudio.clipboard.path`** 会读取**剪贴板**里的路径；若磁盘上存在，则 `setwd()` 并同步 Files 窗格；若是常见 **R 相关文件**，还可选择在编辑器中**打开**（见下文 **行为说明**）。
 
 ---
 
