@@ -129,6 +129,65 @@ normalize_existing_path <- function(path) {
   }
 }
 
+#' Expand and trim a path reported by RStudio before existence checks.
+#' @noRd
+clean_candidate_path <- function(path) {
+  if (is.null(path) || !length(path)) {
+    return("")
+  }
+  path <- trimws(path[[1L]])
+  if (!nzchar(path)) {
+    return("")
+  }
+  path.expand(path)
+}
+
+#' Resolve the current source file path, tolerating command-palette timing jitter.
+#' @noRd
+resolve_active_source_path <- function(retries = 10L, retry_delay = 0.1) {
+  last_path <- ""
+
+  for (attempt in seq_len(retries)) {
+    contexts <- list(
+      tryCatch(getSourceEditorContext(), error = function(e) NULL),
+      tryCatch(getActiveDocumentContext(), error = function(e) NULL)
+    )
+
+    for (ctx in contexts) {
+      if (is.null(ctx) || is.null(ctx$path)) {
+        next
+      }
+
+      path_raw <- clean_candidate_path(ctx$path)
+      if (!nzchar(path_raw)) {
+        next
+      }
+
+      last_path <- path_raw
+      if (file.exists(path_raw) || dir.exists(path_raw)) {
+        return(path_raw)
+      }
+    }
+
+    if (attempt < retries) {
+      Sys.sleep(retry_delay)
+    }
+  }
+
+  if (!nzchar(last_path)) {
+    stop(
+      "The active source editor has no file path (e.g. an unsaved Untitled document). ",
+      "Save the file or open one from disk, then run this add-in again.",
+      call. = FALSE
+    )
+  }
+
+  stop(
+    "Active path does not exist on disk:\n", last_path,
+    call. = FALSE
+  )
+}
+
 #' Emit \code{setwd(...)} in the RStudio console (executed again) so the user sees the exact call.
 #' @noRd
 announce_setwd <- function(dir_abs) {
@@ -150,20 +209,36 @@ announce_setwd <- function(dir_abs) {
   invisible(dir_abs)
 }
 
+#' Show the Files pane after navigation when the command is available.
+#' @noRd
+activate_files_pane <- function() {
+  tryCatch(
+    executeCommand("activateFiles", quiet = TRUE),
+    error = function(e) NULL
+  )
+  invisible(NULL)
+}
+
+#' Keep the working directory and Files pane in sync.
+#' @noRd
+sync_working_directory_ui <- function(dir_abs) {
+  setwd(dir_abs)
+  filesPaneNavigate(dir_abs)
+  announce_setwd(dir_abs)
+  activate_files_pane()
+  invisible(dir_abs)
+}
+
 #' Set \code{setwd} + Files pane from an existing file or directory path; may open R files.
 #' @noRd
 apply_wd_from_existing_path <- function(path_clean) {
   path_abs <- normalize_existing_path(path_clean)
   if (dir.exists(path_abs)) {
-    setwd(path_abs)
-    filesPaneNavigate(path_abs)
-    announce_setwd(path_abs)
+    sync_working_directory_ui(path_abs)
     return(invisible(path_abs))
   }
   dir_abs <- normalize_existing_path(dirname(path_abs))
-  setwd(dir_abs)
-  filesPaneNavigate(dir_abs)
-  announce_setwd(dir_abs)
+  sync_working_directory_ui(dir_abs)
   if (is_r_ecosystem_file(path_abs)) {
     navigateToFile(path_abs)
   }
@@ -184,30 +259,14 @@ quick_wd_from_clipboard_only <- function() {
 
 #' @noRd
 quick_wd_from_active_file_only <- function() {
-  ctx <- getActiveDocumentContext()
-  path_raw <- ctx$path
-  if (is.null(path_raw) || !nzchar(path_raw)) {
-    stop(
-      "The active editor has no file path (e.g. an unsaved Untitled document). ",
-      "Save the file or open one from disk, then run this add-in again.",
-      call. = FALSE
-    )
-  }
-  if (!file.exists(path_raw) && !dir.exists(path_raw)) {
-    stop(
-      "Active path does not exist on disk:\n", path_raw,
-      call. = FALSE
-    )
-  }
+  path_raw <- resolve_active_source_path()
   path_abs <- normalize_existing_path(path_raw)
   dir_abs <- if (dir.exists(path_abs)) {
     path_abs
   } else {
     normalize_existing_path(dirname(path_abs))
   }
-  setwd(dir_abs)
-  filesPaneNavigate(dir_abs)
-  announce_setwd(dir_abs)
+  sync_working_directory_ui(dir_abs)
   invisible(path_abs)
 }
 
